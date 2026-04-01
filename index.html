@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>VHA Proposed Rates Generator | Manulife</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --green-dark:  #00704A;
+      --green-mid:   #00A758;
+      --green-light: #E6F5EF;
+      --green-pale:  #F0FAF5;
+      --grey-100:    #F5F5F5;
+      --grey-200:    #E8E8E8;
+      --grey-400:    #9E9E9E;
+      --grey-700:    #424242;
+      --white:       #FFFFFF;
+      --shadow:      0 2px 12px rgba(0,0,0,.08);
+      --radius:      8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--grey-100);
+      color: var(--grey-700);
+      min-height: 100vh;
+    }
+
+    /* ── Nav bar ── */
+    .navbar {
+      background: var(--white);
+      border-bottom: 3px solid var(--green-mid);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 64px;
+      box-shadow: var(--shadow);
+    }
+    .navbar-brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo-bars { display: flex; gap: 4px; align-items: flex-end; }
+    .logo-bar  { background: var(--green-mid); border-radius: 2px; }
+    .logo-bar:nth-child(1) { width: 8px; height: 20px; }
+    .logo-bar:nth-child(2) { width: 8px; height: 26px; }
+    .logo-bar:nth-child(3) { width: 8px; height: 32px; }
+    .brand-name { font-size: 22px; font-weight: 700; color: var(--grey-700); letter-spacing: -.5px; }
+    .brand-subtitle { font-size: 12px; color: var(--grey-400); }
+
+    /* ── Layout ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
+    .page-sub   { font-size: 13px; color: var(--grey-400); margin-bottom: 28px; }
+
+    /* ── Steps ── */
+    .steps { display: flex; gap: 0; margin-bottom: 32px; }
+    .step  {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; background: var(--white);
+      border: 1px solid var(--grey-200); cursor: default;
+      font-size: 13px; font-weight: 600;
+    }
+    .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .step:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
+    .step + .step     { border-left: none; }
+    .step.active { background: var(--green-mid); color: var(--white); border-color: var(--green-mid); }
+    .step.done   { background: var(--green-light); color: var(--green-dark); border-color: var(--green-mid); }
+    .step-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      background: rgba(255,255,255,.3);
+    }
+    .step.active .step-num { background: rgba(255,255,255,.4); }
+    .step.done   .step-num { background: var(--green-mid); color: var(--white); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px;
+    }
+    .card-title { font-size: 15px; font-weight: 700; color: var(--green-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    /* ── Drop zone ── */
+    .dropzone {
+      border: 2px dashed var(--green-mid);
+      border-radius: var(--radius);
+      padding: 52px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--green-pale);
+    }
+    .dropzone:hover, .dropzone.drag { background: var(--green-light); border-color: var(--green-dark); }
+    .dropzone-icon { font-size: 48px; margin-bottom: 12px; }
+    .dropzone-text  { font-size: 15px; font-weight: 600; color: var(--green-dark); }
+    .dropzone-sub   { font-size: 12px; color: var(--grey-400); margin-top: 6px; }
+    .file-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-light); border: 1px solid var(--green-mid);
+      border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+      color: var(--green-dark); margin-top: 12px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: var(--radius);
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      border: none; transition: all .2s;
+    }
+    .btn-primary  { background: var(--green-mid); color: var(--white); }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-outline  { background: var(--white); color: var(--green-dark); border: 2px solid var(--green-mid); }
+    .btn-outline:hover { background: var(--green-light); }
+    .btn-download { background: var(--green-dark); color: var(--white); font-size: 15px; padding: 14px 32px; }
+    .btn-download:hover { background: #004d33; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: white; border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Summary chips ── */
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .chip {
+      background: var(--green-light);
+      border: 1px solid var(--green-mid);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: 12px; font-weight: 600; color: var(--green-dark);
+    }
+
+    /* ── Benefit summary table ── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: var(--green-dark); color: var(--white); }
+    thead th { padding: 10px 14px; text-align: left; font-weight: 600; white-space: nowrap; }
+    tbody tr:nth-child(even) { background: var(--grey-100); }
+    tbody tr:hover { background: var(--green-pale); }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid var(--grey-200); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Rate editor ── */
+    .rate-section { margin-bottom: 28px; }
+    .rate-section-title {
+      font-size: 13px; font-weight: 700; color: var(--green-dark);
+      background: var(--green-light); padding: 8px 14px;
+      border-left: 4px solid var(--green-mid); border-radius: 0 4px 4px 0;
+      margin-bottom: 12px;
+    }
+    .rate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .rate-row {
+      background: var(--grey-100); border-radius: var(--radius);
+      padding: 14px 16px; display: grid;
+      grid-template-columns: 1fr auto; align-items: center; gap: 8px;
+    }
+    .rate-label { font-size: 12px; font-weight: 600; color: var(--grey-700); }
+    .rate-sub   { font-size: 11px; color: var(--grey-400); margin-top: 2px; }
+    .rate-input {
+      width: 90px; padding: 6px 10px; border: 1px solid var(--grey-200);
+      border-radius: 6px; font-size: 13px; text-align: right;
+      outline: none; transition: border .2s;
+    }
+    .rate-input:focus { border-color: var(--green-mid); }
+
+    /* ── Adj grid ── */
+    .adj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .adj-card {
+      background: var(--grey-100); border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .adj-name { font-size: 12px; font-weight: 700; color: var(--grey-700); margin-bottom: 8px; }
+    .adj-input-wrap { display: flex; align-items: center; gap: 6px; }
+    .adj-input {
+      flex: 1; padding: 7px 10px; border: 1px solid var(--grey-200);
+      border-radius: 6px; font-size: 13px; font-weight: 700; text-align: right;
+      outline: none; transition: border .2s;
+    }
+    .adj-input:focus { border-color: var(--green-mid); }
+    .adj-pct { font-size: 13px; color: var(--grey-400); font-weight: 600; }
+    .adj-neg { color: #C62828; }
+    .adj-pos { color: var(--green-dark); }
+
+    /* ── Preview table ── */
+    .preview-table th { font-size: 11px; }
+    .preview-table td { font-size: 12px; padding: 7px 12px; }
+    .badge-benefit {
+      background: var(--green-light); color: var(--green-dark);
+      border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700;
+    }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--grey-200); margin-bottom: 20px; }
+    .tab {
+      padding: 10px 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; color: var(--grey-400); transition: all .15s;
+    }
+    .tab.active { color: var(--green-dark); border-bottom-color: var(--green-mid); }
+    .tab:hover  { color: var(--green-dark); }
+
+    /* ── Alert ── */
+    .alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; }
+    .alert-error  { background: #FFEBEE; border: 1px solid #EF9A9A; color: #B71C1C; }
+    .alert-success{ background: var(--green-light); border: 1px solid var(--green-mid); color: var(--green-dark); }
+
+    /* ── footer ── */
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--grey-400); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="logo-bars">
+      <div class="logo-bar"></div>
+      <div class="logo-bar"></div>
+      <div class="logo-bar"></div>
+    </div>
+    <div>
+      <div class="brand-name">Manulife</div>
+      <div class="brand-subtitle">Group Benefits Automation</div>
+    </div>
+  </div>
+  <div style="font-size:13px;color:var(--grey-400);">VHA Home HealthCare · Rates Engine</div>
+</nav>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useCallback, useRef } = React;
+
+const BENEFIT_LABELS = {
+  LIFE: "Basic Life",   DEPL: "Dependent Life",  ADD: "AD&D",
+  LTD:  "LTD",         STD:  "STD",             EHC: "Extended Health",
+  DENT: "Dental",
+};
+
+const FMT_NUM = (n) => n == null ? "–" : Number(n).toLocaleString();
+const FMT_RATE = (n) => n == null ? "–" : Number(n).toFixed(4);
+const FMT_PCT  = (n) => n == null ? "–" : (Number(n)*100).toFixed(1)+"%";
+
+// ── Step indicator ──────────────────────────────────────────────────────────
+function Steps({ current }) {
+  const steps = ["Upload File", "Review & Configure", "Generate Report"];
+  return (
+    <div className="steps">
+      {steps.map((s, i) => (
+        <div key={i} className={`step ${i < current ? "done" : i === current ? "active" : ""}`}>
+          <div className="step-num">{i < current ? "✓" : i + 1}</div>
+          {s}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Drop zone ───────────────────────────────────────────────────────────────
+function DropZone({ onFile, file }) {
+  const [drag, setDrag] = useState(false);
+  const inputRef = useRef();
+
+  const handleFile = (f) => {
+    if (f && f.name.match(/\.xlsx?$/i)) onFile(f);
+  };
+
+  return (
+    <div
+      className={`dropzone ${drag ? "drag" : ""}`}
+      onClick={() => inputRef.current.click()}
+      onDragOver={e => { e.preventDefault(); setDrag(true); }}
+      onDragLeave={() => setDrag(false)}
+      onDrop={e => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]); }}
+    >
+      <input ref={inputRef} type="file" accept=".xlsx,.xls" style={{display:"none"}}
+             onChange={e => handleFile(e.target.files[0])} />
+      <div className="dropzone-icon">📊</div>
+      <div className="dropzone-text">
+        {file ? "File selected – click to change" : "Drop your Lives & Volumes Excel here"}
+      </div>
+      <div className="dropzone-sub">.xlsx · First sheet (LivesAndVolumes original)</div>
+      {file && <div className="file-badge">📎 {file.name}</div>}
+    </div>
+  );
+}
+
+// ── Benefit summary table ───────────────────────────────────────────────────
+function BenefitSummary({ data }) {
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Benefit</th><th>Plans</th>
+            <th className="num">Total Lives</th>
+            <th className="num">Total Volumes</th>
+            <th className="num">Rows</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((r, i) => (
+            <tr key={i}>
+              <td><span className="badge-benefit">{r.Benefit}</span></td>
+              <td style={{fontFamily:"monospace",fontSize:11}}>{r.Plans}</td>
+              <td className="num">{FMT_NUM(r.Total_Lives)}</td>
+              <td className="num">{FMT_NUM(r.Total_Volumes)}</td>
+              <td className="num">{r.Rows}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Rate adjustments editor ─────────────────────────────────────────────────
+function AdjEditor({ adjs, onChange }) {
+  const labels = {
+    LIFE: "Basic Life",  DEPL: "Dependent Life", ADD: "AD&D",
+    LTD: "LTD",          STD: "STD",             EHC: "Extended Health",
+    DENT: "Dental",
+  };
+  return (
+    <div>
+      <div className="rate-section-title">Proposed Rate Adjustments (%)</div>
+      <div className="adj-grid">
+        {Object.entries(adjs).map(([code, val]) => {
+          const pct = (val * 100).toFixed(1);
+          const cls = val < 0 ? "adj-neg" : val > 0 ? "adj-pos" : "";
+          return (
+            <div className="adj-card" key={code}>
+              <div className="adj-name">{labels[code] || code}</div>
+              <div className="adj-input-wrap">
+                <input
+                  type="number" step="0.1" className={`adj-input ${cls}`}
+                  value={pct}
+                  onChange={e => {
+                    const v = parseFloat(e.target.value) / 100;
+                    onChange({ ...adjs, [code]: isNaN(v) ? 0 : v });
+                  }}
+                />
+                <span className="adj-pct">%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Computed groups preview ─────────────────────────────────────────────────
+function GroupsPreview({ groups }) {
+  if (!groups) return <p style={{color:"var(--grey-400)"}}>No data yet.</p>;
+  const rows = [];
+  for (const [code, grpList] of Object.entries(groups)) {
+    grpList.forEach(r => {
+      rows.push({ code, ...r });
+    });
+  }
+  return (
+    <div className="table-wrap">
+      <table className="preview-table">
+        <thead>
+          <tr>
+            <th>Benefit</th><th>Division</th><th>Plans</th><th>Basis</th>
+            <th className="num">Lives</th>
+            <th className="num">Volumes</th>
+            <th className="num">Curr Rate</th>
+            <th className="num">Prop Rate</th>
+            <th className="num">Curr Premium</th>
+            <th className="num">Prop Premium</th>
+            <th className="num">Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              <td><span className="badge-benefit">{r.code}</span></td>
+              <td>{r.division}</td>
+              <td style={{fontFamily:"monospace",fontSize:11}}>{r.plans}</td>
+              <td>{r.basis_unit}</td>
+              <td className="num">{FMT_NUM(r.lives)}</td>
+              <td className="num">{r.volumes != null ? FMT_NUM(r.volumes) : "–"}</td>
+              <td className="num">{FMT_RATE(r.curr_exp_rate)}</td>
+              <td className="num">{FMT_RATE(r.prop_exp_rate)}</td>
+              <td className="num">{r.curr_premium != null ? FMT_NUM(r.curr_premium) : "–"}</td>
+              <td className="num">{r.prop_premium != null ? FMT_NUM(r.prop_premium) : "–"}</td>
+              <td className="num" style={{color: r.total_rate_chg < 0 ? "#C62828" : "#00704A"}}>
+                {FMT_PCT(r.total_rate_chg)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── Main App ────────────────────────────────────────────────────────────────
+function App() {
+  const [step,    setStep]    = useState(0);
+  const [file,    setFile]    = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState(null);
+  const [parsed,  setParsed]  = useState(null);
+  const [adjs,    setAdjs]    = useState({
+    LIFE:-0.20, DEPL:-0.20, ADD:0.00,
+    LTD:0.20, STD:-0.10, EHC:0.15, DENT:-0.05
+  });
+  const [previewData, setPreviewData] = useState(null);
+  const [activeTab, setActiveTab] = useState("summary");
+
+  const handleFile = (f) => { setFile(f); setError(null); setParsed(null); setPreviewData(null); };
+
+  // Step 1: parse
+  const handleParse = async () => {
+    if (!file) return;
+    setLoading(true); setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/parse", { method:"POST", body: form });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      setParsed(data);
+      setStep(1);
+      // Also get preview with default adjs
+      await fetchPreview(file, adjs);
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  const fetchPreview = async (f, currentAdjs) => {
+    const form = new FormData();
+    form.append("file", f);
+    form.append("adjustments", JSON.stringify(currentAdjs));
+    try {
+      const res = await fetch("/api/preview", { method:"POST", body: form });
+      const data = await res.json();
+      if (data.ok) setPreviewData(data.report.groups);
+    } catch(e) {}
+  };
+
+  const handleAdjChange = async (newAdjs) => {
+    setAdjs(newAdjs);
+    if (file) await fetchPreview(file, newAdjs);
+  };
+
+  // Step 2: generate Excel
+  const handleGenerate = async () => {
+    if (!file) return;
+    setLoading(true); setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("adjustments", JSON.stringify(adjs));
+      const res = await fetch("/api/generate", { method:"POST", body: form });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error);
+      }
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = "VHA_Proposed_Rates.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
+      setStep(2);
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="container">
+      <div className="page-title">Proposed Rates Generator</div>
+      <div className="page-sub">Upload the raw Lives &amp; Volumes Excel → auto-clean → compute pivot → generate the full Proposed Rates report</div>
+
+      <Steps current={step} />
+
+      {error && <div className="alert alert-error">⚠️ {error}</div>}
+
+      {/* ── STEP 0: Upload ── */}
+      <div className="card">
+        <div className="card-title">📁 Step 1 · Upload Lives &amp; Volumes</div>
+        <DropZone file={file} onFile={handleFile} />
+        <div style={{marginTop:16,display:"flex",gap:12,alignItems:"center"}}>
+          <button className="btn btn-primary" disabled={!file || loading} onClick={handleParse}>
+            {loading && step === 0 ? <><span className="spinner"/>&nbsp;Parsing…</> : "🔍 Parse & Clean"}
+          </button>
+          {parsed && <span style={{fontSize:13,color:"var(--green-dark)"}}>✅ {parsed.total_rows} records cleaned</span>}
+        </div>
+      </div>
+
+      {/* ── STEP 1: Review & Configure ── */}
+      {parsed && (
+        <div className="card">
+          <div className="card-title">⚙️ Step 2 · Review &amp; Configure Rates</div>
+
+          {/* Meta chips */}
+          <div className="chips">
+            <span className="chip">Client: {parsed.client_name}</span>
+            <span className="chip">Period: {parsed.period_str}</span>
+            <span className="chip">Contracts: {parsed.contract_numbers.join(", ")}</span>
+            <span className="chip">Records: {parsed.total_rows}</span>
+          </div>
+
+          {/* Tabs */}
+          <div className="tabs">
+            {["summary","adjustments","preview"].map(t => (
+              <div key={t} className={`tab ${activeTab===t?"active":""}`} onClick={()=>setActiveTab(t)}>
+                {t === "summary"    ? "📋 Benefit Summary"
+                : t === "adjustments" ? "🎛️ Rate Adjustments"
+                : "📊 Computed Groups"}
+              </div>
+            ))}
+          </div>
+
+          {activeTab === "summary" && (
+            <BenefitSummary data={parsed.benefit_summary} />
+          )}
+
+          {activeTab === "adjustments" && (
+            <div>
+              <p style={{fontSize:13,color:"var(--grey-400)",marginBottom:16}}>
+                Adjust the proposed rate change (%) for each benefit. Premiums will recalculate automatically.
+              </p>
+              <AdjEditor adjs={adjs} onChange={handleAdjChange} />
+            </div>
+          )}
+
+          {activeTab === "preview" && (
+            <div>
+              <p style={{fontSize:13,color:"var(--grey-400)",marginBottom:12}}>
+                Computed lives, volumes, current &amp; proposed rates for each group.
+              </p>
+              <GroupsPreview groups={previewData} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── STEP 2: Generate ── */}
+      {parsed && (
+        <div className="card" style={{textAlign:"center",padding:"36px 28px"}}>
+          <div className="card-title" style={{justifyContent:"center"}}>🚀 Step 3 · Generate Report</div>
+          <p style={{fontSize:14,color:"var(--grey-400)",marginBottom:24}}>
+            Generates the <strong>VHA Proposed Rates Excel</strong> with all benefit sections,<br/>
+            current &amp; proposed rates, premiums, and rate change analysis.
+          </p>
+          <button className="btn btn-download" disabled={loading} onClick={handleGenerate}>
+            {loading && step !== 0
+              ? <><span className="spinner"/>&nbsp;Generating…</>
+              : "⬇ Download Proposed Rates Excel"}
+          </button>
+          {step === 2 && (
+            <div className="alert alert-success" style={{marginTop:20,textAlign:"left"}}>
+              ✅ <strong>Report generated successfully!</strong> Check your downloads folder for <em>VHA_Proposed_Rates.xlsx</em>.
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="footer">Manulife Group Benefits · VHA Proposed Rates Automation · Confidential</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

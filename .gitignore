@@ -1,0 +1,21 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Excel files (raw data & generated outputs - may contain sensitive business data)
+*.xlsx
+*.xls
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
