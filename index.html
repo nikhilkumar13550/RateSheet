@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>VHA Proposed Rates Generator | Manulife</title>
+  <title>CGB Underwriter Workflows | Manulife</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -20,6 +20,15 @@
       --white:       #FFFFFF;
       --shadow:      0 2px 12px rgba(0,0,0,.08);
       --radius:      8px;
+
+      /* Landing page palette */
+      --landing-bg:     #1a1f3c;
+      --workflow-card:  #FFFFFF;
+      --btn-salmon:     #C97B72;
+      --btn-salmon-hov: #B5655C;
+      --btn-active:     #1C1C2E;
+      --btn-vha-idle:   #C97B72;
+      --btn-vha-sel:    #1C1C2E;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -29,31 +38,108 @@
       min-height: 100vh;
     }
 
-    /* ── Nav bar ── */
+    /* ── Nav bar (Layer 2 only) ── */
     .navbar {
-      background: var(--white);
+      background: #1a1f3c;
       border-bottom: 3px solid var(--green-mid);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 32px; height: 64px;
-      box-shadow: var(--shadow);
+      box-shadow: 0 2px 16px rgba(0,0,0,.4);
     }
-    .navbar-brand {
-      display: flex; align-items: center; gap: 12px;
-    }
+    .navbar-brand { display: flex; align-items: center; gap: 12px; }
     .logo-bars { display: flex; gap: 4px; align-items: flex-end; }
-    .logo-bar  { background: var(--green-mid); border-radius: 2px; }
+    .logo-bar  { background: var(--green-mid); border-radius: 2px; opacity: .9; }
     .logo-bar:nth-child(1) { width: 8px; height: 20px; }
     .logo-bar:nth-child(2) { width: 8px; height: 26px; }
     .logo-bar:nth-child(3) { width: 8px; height: 32px; }
-    .brand-name { font-size: 22px; font-weight: 700; color: var(--grey-700); letter-spacing: -.5px; }
-    .brand-subtitle { font-size: 12px; color: var(--grey-400); }
+    .brand-name     { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -.5px; }
+    .brand-subtitle { font-size: 12px; color: rgba(255,255,255,.5); }
+    .nav-right { font-size: 13px; color: rgba(255,255,255,.55); display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--green-dark);
+      background: var(--green-light); border: 1px solid var(--green-mid);
+      border-radius: 20px; padding: 5px 14px; cursor: pointer;
+      transition: background .15s;
+    }
+    .back-btn:hover { background: #c8eadb; }
 
-    /* ── Layout ── */
+    /* ════════════════════════════════════════
+       LAYER 1 – Landing / CGB Workflows
+    ════════════════════════════════════════ */
+    .landing-page {
+      min-height: 100vh;
+      background: var(--landing-bg);
+      display: flex; align-items: center; justify-content: center;
+      padding: 48px 24px;
+    }
+    .workflow-card {
+      background: var(--workflow-card);
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.35);
+      padding: 44px 48px 48px;
+      width: 100%; max-width: 840px;
+    }
+    .workflow-title {
+      font-size: 22px; font-weight: 700;
+      color: #1C1C2E; text-align: center;
+      margin-bottom: 32px; letter-spacing: -.3px;
+    }
+    .workflow-rows { display: flex; flex-direction: column; gap: 14px; }
+    .workflow-row  { display: flex; gap: 12px; flex-wrap: wrap; }
+    .wf-btn {
+      flex: 1; min-width: 150px;
+      padding: 13px 16px;
+      border: none; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 600; line-height: 1.3;
+      background: var(--btn-salmon); color: #fff;
+      transition: background .18s, transform .12s, box-shadow .18s;
+      text-align: center;
+    }
+    .wf-btn:hover        { background: var(--btn-salmon-hov); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+    .wf-btn.inactive     { cursor: default; opacity: .88; }
+    .wf-btn.inactive:hover { transform: none; box-shadow: none; background: var(--btn-salmon); }
+    .wf-btn.vha-selected { background: var(--btn-vha-sel); color: #fff; box-shadow: 0 4px 16px rgba(28,28,46,.35); }
+    .wf-btn.vha-selected:hover { background: #2e2e48; transform: none; }
+
+    /* Upload section (inside landing card) */
+    .upload-section {
+      margin-top: 32px;
+    }
+    .upload-label {
+      font-size: 13px; font-weight: 700; color: #555;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    /* Dashed upload box – plain style matching the screenshot */
+    .dropzone {
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: #fafafa;
+    }
+    .dropzone:hover, .dropzone.drag { background: #f0f0f0; border-color: #999; }
+    .dropzone-icon { font-size: 36px; margin-bottom: 8px; }
+    .dropzone-text { font-size: 14px; font-weight: 700; color: #333; }
+    .dropzone-sub  { font-size: 12px; color: var(--grey-400); margin-top: 5px; }
+    .file-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-light); border: 1px solid var(--green-mid);
+      border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+      color: var(--green-dark); margin-top: 12px;
+    }
+    .upload-actions { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+
+    /* ════════════════════════════════════════
+       LAYER 2 – VHA Workflow
+    ════════════════════════════════════════ */
     .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
     .page-title { font-size: 22px; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
     .page-sub   { font-size: 13px; color: var(--grey-400); margin-bottom: 28px; }
 
-    /* ── Steps ── */
+    /* Steps */
     .steps { display: flex; gap: 0; margin-bottom: 32px; }
     .step  {
       display: flex; align-items: center; gap: 10px;
@@ -75,35 +161,14 @@
     .step.active .step-num { background: rgba(255,255,255,.4); }
     .step.done   .step-num { background: var(--green-mid); color: var(--white); }
 
-    /* ── Cards ── */
+    /* Cards */
     .card {
       background: var(--white); border-radius: var(--radius);
       box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px;
     }
     .card-title { font-size: 15px; font-weight: 700; color: var(--green-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
-    /* ── Drop zone ── */
-    .dropzone {
-      border: 2px dashed var(--green-mid);
-      border-radius: var(--radius);
-      padding: 52px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all .2s;
-      background: var(--green-pale);
-    }
-    .dropzone:hover, .dropzone.drag { background: var(--green-light); border-color: var(--green-dark); }
-    .dropzone-icon { font-size: 48px; margin-bottom: 12px; }
-    .dropzone-text  { font-size: 15px; font-weight: 600; color: var(--green-dark); }
-    .dropzone-sub   { font-size: 12px; color: var(--grey-400); margin-top: 6px; }
-    .file-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--green-light); border: 1px solid var(--green-mid);
-      border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600;
-      color: var(--green-dark); margin-top: 12px;
-    }
-
-    /* ── Buttons ── */
+    /* Buttons */
     .btn {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 22px; border-radius: var(--radius);
@@ -118,7 +183,7 @@
     .btn-download:hover { background: #004d33; }
     .btn:disabled { opacity: .45; cursor: not-allowed; }
 
-    /* ── Spinner ── */
+    /* Spinner */
     .spinner {
       display: inline-block; width: 18px; height: 18px;
       border: 2px solid rgba(255,255,255,.4);
@@ -127,16 +192,15 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Summary chips ── */
+    /* Summary chips */
     .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     .chip {
-      background: var(--green-light);
-      border: 1px solid var(--green-mid);
+      background: var(--green-light); border: 1px solid var(--green-mid);
       border-radius: 20px; padding: 5px 14px;
       font-size: 12px; font-weight: 600; color: var(--green-dark);
     }
 
-    /* ── Benefit summary table ── */
+    /* Table */
     .table-wrap { overflow-x: auto; border-radius: var(--radius); }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     thead tr { background: var(--green-dark); color: var(--white); }
@@ -146,7 +210,7 @@
     tbody td { padding: 9px 14px; border-bottom: 1px solid var(--grey-200); }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
 
-    /* ── Rate editor ── */
+    /* Rate editor */
     .rate-section { margin-bottom: 28px; }
     .rate-section-title {
       font-size: 13px; font-weight: 700; color: var(--green-dark);
@@ -169,13 +233,10 @@
     }
     .rate-input:focus { border-color: var(--green-mid); }
 
-    /* ── Adj grid ── */
+    /* Adj grid */
     .adj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-    .adj-card {
-      background: var(--grey-100); border-radius: var(--radius);
-      padding: 14px 16px;
-    }
-    .adj-name { font-size: 12px; font-weight: 700; color: var(--grey-700); margin-bottom: 8px; }
+    .adj-card  { background: var(--grey-100); border-radius: var(--radius); padding: 14px 16px; }
+    .adj-name  { font-size: 12px; font-weight: 700; color: var(--grey-700); margin-bottom: 8px; }
     .adj-input-wrap { display: flex; align-items: center; gap: 6px; }
     .adj-input {
       flex: 1; padding: 7px 10px; border: 1px solid var(--grey-200);
@@ -187,7 +248,7 @@
     .adj-neg { color: #C62828; }
     .adj-pos { color: var(--green-dark); }
 
-    /* ── Preview table ── */
+    /* Preview table */
     .preview-table th { font-size: 11px; }
     .preview-table td { font-size: 12px; padding: 7px 12px; }
     .badge-benefit {
@@ -195,7 +256,7 @@
       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 700;
     }
 
-    /* ── Tabs ── */
+    /* Tabs */
     .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--grey-200); margin-bottom: 20px; }
     .tab {
       padding: 10px 20px; font-size: 13px; font-weight: 600;
@@ -205,64 +266,58 @@
     .tab.active { color: var(--green-dark); border-bottom-color: var(--green-mid); }
     .tab:hover  { color: var(--green-dark); }
 
-    /* ── Alert ── */
+    /* Alert */
     .alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; }
-    .alert-error  { background: #FFEBEE; border: 1px solid #EF9A9A; color: #B71C1C; }
-    .alert-success{ background: var(--green-light); border: 1px solid var(--green-mid); color: var(--green-dark); }
+    .alert-error   { background: #FFEBEE; border: 1px solid #EF9A9A; color: #B71C1C; }
+    .alert-success { background: var(--green-light); border: 1px solid var(--green-mid); color: var(--green-dark); }
 
-    /* ── footer ── */
+    /* Footer */
     .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--grey-400); }
   </style>
 </head>
 <body>
-
-<nav class="navbar">
-  <div class="navbar-brand">
-    <div class="logo-bars">
-      <div class="logo-bar"></div>
-      <div class="logo-bar"></div>
-      <div class="logo-bar"></div>
-    </div>
-    <div>
-      <div class="brand-name">Manulife</div>
-      <div class="brand-subtitle">Group Benefits Automation</div>
-    </div>
-  </div>
-  <div style="font-size:13px;color:var(--grey-400);">VHA Home HealthCare · Rates Engine</div>
-</nav>
 
 <div id="root"></div>
 
 <script type="text/babel">
 const { useState, useCallback, useRef } = React;
 
-const BENEFIT_LABELS = {
-  LIFE: "Basic Life",   DEPL: "Dependent Life",  ADD: "AD&D",
-  LTD:  "LTD",         STD:  "STD",             EHC: "Extended Health",
-  DENT: "Dental",
-};
-
-const FMT_NUM = (n) => n == null ? "–" : Number(n).toLocaleString();
+/* ─── Formatters ───────────────────────────────────────────────────────────── */
+const FMT_NUM  = (n) => n == null ? "–" : Number(n).toLocaleString();
 const FMT_RATE = (n) => n == null ? "–" : Number(n).toFixed(4);
 const FMT_PCT  = (n) => n == null ? "–" : (Number(n)*100).toFixed(1)+"%";
 
-// ── Step indicator ──────────────────────────────────────────────────────────
-function Steps({ current }) {
-  const steps = ["Upload File", "Review & Configure", "Generate Report"];
+/* ─── Shared Navbar ────────────────────────────────────────────────────────── */
+function Navbar({ showBack, onBack }) {
   return (
-    <div className="steps">
-      {steps.map((s, i) => (
-        <div key={i} className={`step ${i < current ? "done" : i === current ? "active" : ""}`}>
-          <div className="step-num">{i < current ? "✓" : i + 1}</div>
-          {s}
+    <nav className="navbar">
+      <div className="navbar-brand">
+        <div className="logo-bars">
+          <div className="logo-bar"></div>
+          <div className="logo-bar"></div>
+          <div className="logo-bar"></div>
         </div>
-      ))}
-    </div>
+        <div>
+          <div className="brand-name">Manulife</div>
+          <div className="brand-subtitle">Group Benefits Automation</div>
+        </div>
+      </div>
+      <div className="nav-right">
+        {showBack && (
+          <span className="back-btn" onClick={onBack}>← CGB Workflows</span>
+        )}
+        <span>CGB Underwriter Workflows</span>
+      </div>
+    </nav>
   );
 }
 
-// ── Drop zone ───────────────────────────────────────────────────────────────
-function DropZone({ onFile, file }) {
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 1 – Landing Page
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Drop zone used on the landing page */
+function LandingDropZone({ onFile, file }) {
   const [drag, setDrag] = useState(false);
   const inputRef = useRef();
 
@@ -282,15 +337,137 @@ function DropZone({ onFile, file }) {
              onChange={e => handleFile(e.target.files[0])} />
       <div className="dropzone-icon">📊</div>
       <div className="dropzone-text">
-        {file ? "File selected – click to change" : "Drop your Lives & Volumes Excel here"}
+        {file ? "File selected – click to change" : "Drop the Lives & Volumes Excel here"}
       </div>
-      <div className="dropzone-sub">.xlsx · First sheet (LivesAndVolumes original)</div>
+      <div className="dropzone-sub">.xlsx · LivesAndVolumes report</div>
       {file && <div className="file-badge">📎 {file.name}</div>}
     </div>
   );
 }
 
-// ── Benefit summary table ───────────────────────────────────────────────────
+/* The workflow button grid + upload panel */
+function LandingPage({ onEnterVHA }) {
+  const [vhaSelected, setVhaSelected] = useState(false);
+  const [file, setFile]               = useState(null);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState(null);
+
+  // Workflow buttons – only VHA is functional; others are decorative
+  const workflows = [
+    ["Signature Data Letter", "CFA & DGF Process", "Corporate Renewal", "Data Manipulation CA"],
+    ["AIM Workload Assignment", "SA Data Manipulation", "SA Data MRT Completion", "VHA Home HealthCare"],
+  ];
+
+  const handleWFClick = (name) => {
+    if (name === "VHA Home HealthCare") {
+      setVhaSelected(true);
+      setError(null);
+    }
+    // other buttons are decorative – no action
+  };
+
+  const handleParse = async () => {
+    if (!file) return;
+    setLoading(true); setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res  = await fetch("/api/parse", { method: "POST", body: form });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      onEnterVHA({ file, parsed: data });
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="landing-page">
+        <div className="workflow-card">
+          <div className="workflow-title">CGB Underwriter Workflows</div>
+
+          <div className="workflow-rows">
+            {workflows.map((row, ri) => (
+              <div className="workflow-row" key={ri}>
+                {row.map((name) => {
+                  const isVHA = name === "VHA Home HealthCare";
+                  return (
+                    <button
+                      key={name}
+                      className={`wf-btn ${isVHA ? (vhaSelected ? "vha-selected" : "") : "inactive"}`}
+                      onClick={() => handleWFClick(name)}
+                      title={isVHA ? "Click to open VHA workflow" : "Coming soon"}
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          {/* Upload panel – visible after VHA button is selected */}
+          {vhaSelected && (
+            <div className="upload-section">
+              <div className="upload-label">
+                <span>📁</span> VHA Home HealthCare · Upload Lives &amp; Volumes Report
+              </div>
+
+              <LandingDropZone file={file} onFile={setFile} />
+
+              {error && (
+                <div className="alert alert-error" style={{marginTop:14}}>
+                  ⚠️ {error}
+                </div>
+              )}
+
+              <div className="upload-actions">
+                <button
+                  className="btn btn-primary"
+                  disabled={!file || loading}
+                  onClick={handleParse}
+                >
+                  {loading
+                    ? <><span className="spinner"/>&nbsp;Parsing…</>
+                    : "🔍 Parse & Clean → Open Workflow"}
+                </button>
+                {file && !loading && (
+                  <span style={{fontSize:13,color:"var(--grey-400)"}}>
+                    {file.name}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYER 2 – VHA Workflow Page
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Step indicator (Step 2 & 3 only – upload already done) */
+function Steps({ current }) {
+  const steps = ["Review & Configure Rates", "Generate Report"];
+  return (
+    <div className="steps">
+      {steps.map((s, i) => (
+        <div key={i} className={`step ${i < current ? "done" : i === current ? "active" : ""}`}>
+          <div className="step-num">{i < current ? "✓" : i + 2}</div>
+          {s}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* Benefit summary table */
 function BenefitSummary({ data }) {
   return (
     <div className="table-wrap">
@@ -319,12 +496,11 @@ function BenefitSummary({ data }) {
   );
 }
 
-// ── Rate adjustments editor ─────────────────────────────────────────────────
+/* Rate adjustments editor */
 function AdjEditor({ adjs, onChange }) {
   const labels = {
-    LIFE: "Basic Life",  DEPL: "Dependent Life", ADD: "AD&D",
-    LTD: "LTD",          STD: "STD",             EHC: "Extended Health",
-    DENT: "Dental",
+    LIFE:"Basic Life", DEPL:"Dependent Life", ADD:"AD&D",
+    LTD:"LTD", STD:"STD", EHC:"Extended Health", DENT:"Dental",
   };
   return (
     <div>
@@ -355,14 +531,12 @@ function AdjEditor({ adjs, onChange }) {
   );
 }
 
-// ── Computed groups preview ─────────────────────────────────────────────────
+/* Computed groups preview table */
 function GroupsPreview({ groups }) {
   if (!groups) return <p style={{color:"var(--grey-400)"}}>No data yet.</p>;
   const rows = [];
   for (const [code, grpList] of Object.entries(groups)) {
-    grpList.forEach(r => {
-      rows.push({ code, ...r });
-    });
+    grpList.forEach(r => rows.push({ code, ...r }));
   }
   return (
     <div className="table-wrap">
@@ -403,108 +577,75 @@ function GroupsPreview({ groups }) {
   );
 }
 
-// ── Main App ────────────────────────────────────────────────────────────────
-function App() {
-  const [step,    setStep]    = useState(0);
-  const [file,    setFile]    = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState(null);
-  const [parsed,  setParsed]  = useState(null);
-  const [adjs,    setAdjs]    = useState({
+/* VHA workflow page (layer 2) */
+function VHAPage({ file, parsed, onBack }) {
+  const [step,        setStep]        = useState(0);   // 0 = review, 1 = done
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
+  const [adjs,        setAdjs]        = useState({
     LIFE:-0.20, DEPL:-0.20, ADD:0.00,
-    LTD:0.20, STD:-0.10, EHC:0.15, DENT:-0.05
+    LTD:0.20, STD:-0.10, EHC:0.15, DENT:-0.05,
   });
   const [previewData, setPreviewData] = useState(null);
-  const [activeTab, setActiveTab] = useState("summary");
+  const [activeTab,   setActiveTab]   = useState("summary");
 
-  const handleFile = (f) => { setFile(f); setError(null); setParsed(null); setPreviewData(null); };
-
-  // Step 1: parse
-  const handleParse = async () => {
-    if (!file) return;
-    setLoading(true); setError(null);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/parse", { method:"POST", body: form });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
-      setParsed(data);
-      setStep(1);
-      // Also get preview with default adjs
-      await fetchPreview(file, adjs);
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  const fetchPreview = async (f, currentAdjs) => {
+  // Fetch preview whenever adjustments change
+  const fetchPreview = async (currentAdjs) => {
     const form = new FormData();
-    form.append("file", f);
+    form.append("file", file);
     form.append("adjustments", JSON.stringify(currentAdjs));
     try {
-      const res = await fetch("/api/preview", { method:"POST", body: form });
+      const res  = await fetch("/api/preview", { method:"POST", body: form });
       const data = await res.json();
       if (data.ok) setPreviewData(data.report.groups);
     } catch(e) {}
   };
 
+  // Load preview on first render
+  React.useEffect(() => { fetchPreview(adjs); }, []);
+
   const handleAdjChange = async (newAdjs) => {
     setAdjs(newAdjs);
-    if (file) await fetchPreview(file, newAdjs);
+    await fetchPreview(newAdjs);
   };
 
-  // Step 2: generate Excel
   const handleGenerate = async () => {
-    if (!file) return;
     setLoading(true); setError(null);
     try {
       const form = new FormData();
       form.append("file", file);
       form.append("adjustments", JSON.stringify(adjs));
       const res = await fetch("/api/generate", { method:"POST", body: form });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
-      }
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement("a");
-      a.href = url;
-      a.download = "VHA_Proposed_Rates.xlsx";
-      a.click();
+      a.href = url; a.download = "VHA_Proposed_Rates.xlsx"; a.click();
       URL.revokeObjectURL(url);
-      setStep(2);
+      setStep(1);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   };
 
   return (
-    <div className="container">
-      <div className="page-title">Proposed Rates Generator</div>
-      <div className="page-sub">Upload the raw Lives &amp; Volumes Excel → auto-clean → compute pivot → generate the full Proposed Rates report</div>
+    <>
+      <Navbar showBack={true} onBack={onBack} />
+      <div className="container">
 
-      <Steps current={step} />
-
-      {error && <div className="alert alert-error">⚠️ {error}</div>}
-
-      {/* ── STEP 0: Upload ── */}
-      <div className="card">
-        <div className="card-title">📁 Step 1 · Upload Lives &amp; Volumes</div>
-        <DropZone file={file} onFile={handleFile} />
-        <div style={{marginTop:16,display:"flex",gap:12,alignItems:"center"}}>
-          <button className="btn btn-primary" disabled={!file || loading} onClick={handleParse}>
-            {loading && step === 0 ? <><span className="spinner"/>&nbsp;Parsing…</> : "🔍 Parse & Clean"}
-          </button>
-          {parsed && <span style={{fontSize:13,color:"var(--green-dark)"}}>✅ {parsed.total_rows} records cleaned</span>}
+        <div className="page-title">VHA Home HealthCare · Proposed Rates Generator</div>
+        <div className="page-sub">
+          File: <strong>{file.name}</strong> · {parsed.total_rows} records cleaned ·
+          Client: {parsed.client_name} · Period: {parsed.period_str}
         </div>
-      </div>
 
-      {/* ── STEP 1: Review & Configure ── */}
-      {parsed && (
+        <Steps current={step} />
+
+        {error && <div className="alert alert-error">⚠️ {error}</div>}
+
+        {/* Step 2 – Review & Configure */}
         <div className="card">
           <div className="card-title">⚙️ Step 2 · Review &amp; Configure Rates</div>
 
-          {/* Meta chips */}
           <div className="chips">
             <span className="chip">Client: {parsed.client_name}</span>
             <span className="chip">Period: {parsed.period_str}</span>
@@ -512,30 +653,25 @@ function App() {
             <span className="chip">Records: {parsed.total_rows}</span>
           </div>
 
-          {/* Tabs */}
           <div className="tabs">
             {["summary","adjustments","preview"].map(t => (
               <div key={t} className={`tab ${activeTab===t?"active":""}`} onClick={()=>setActiveTab(t)}>
-                {t === "summary"    ? "📋 Benefit Summary"
+                {t === "summary"      ? "📋 Benefit Summary"
                 : t === "adjustments" ? "🎛️ Rate Adjustments"
-                : "📊 Computed Groups"}
+                :                      "📊 Computed Groups"}
               </div>
             ))}
           </div>
 
-          {activeTab === "summary" && (
-            <BenefitSummary data={parsed.benefit_summary} />
-          )}
-
+          {activeTab === "summary"     && <BenefitSummary data={parsed.benefit_summary} />}
           {activeTab === "adjustments" && (
             <div>
               <p style={{fontSize:13,color:"var(--grey-400)",marginBottom:16}}>
-                Adjust the proposed rate change (%) for each benefit. Premiums will recalculate automatically.
+                Adjust the proposed rate change (%) for each benefit. Premiums recalculate automatically.
               </p>
               <AdjEditor adjs={adjs} onChange={handleAdjChange} />
             </div>
           )}
-
           {activeTab === "preview" && (
             <div>
               <p style={{fontSize:13,color:"var(--grey-400)",marginBottom:12}}>
@@ -545,10 +681,8 @@ function App() {
             </div>
           )}
         </div>
-      )}
 
-      {/* ── STEP 2: Generate ── */}
-      {parsed && (
+        {/* Step 3 – Generate */}
         <div className="card" style={{textAlign:"center",padding:"36px 28px"}}>
           <div className="card-title" style={{justifyContent:"center"}}>🚀 Step 3 · Generate Report</div>
           <p style={{fontSize:14,color:"var(--grey-400)",marginBottom:24}}>
@@ -556,21 +690,37 @@ function App() {
             current &amp; proposed rates, premiums, and rate change analysis.
           </p>
           <button className="btn btn-download" disabled={loading} onClick={handleGenerate}>
-            {loading && step !== 0
+            {loading
               ? <><span className="spinner"/>&nbsp;Generating…</>
               : "⬇ Download Proposed Rates Excel"}
           </button>
-          {step === 2 && (
+          {step === 1 && (
             <div className="alert alert-success" style={{marginTop:20,textAlign:"left"}}>
-              ✅ <strong>Report generated successfully!</strong> Check your downloads folder for <em>VHA_Proposed_Rates.xlsx</em>.
+              ✅ <strong>Report generated!</strong> Check your downloads for <em>VHA_Proposed_Rates.xlsx</em>.
             </div>
           )}
         </div>
-      )}
 
-      <div className="footer">Manulife Group Benefits · VHA Proposed Rates Automation · Confidential</div>
-    </div>
+      </div>
+      <div className="footer">Manulife Group Benefits · VHA Home HealthCare · Proposed Rates Automation · Confidential</div>
+    </>
   );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Root – controls which layer is shown
+═══════════════════════════════════════════════════════════════════════════ */
+function App() {
+  const [view,   setView]   = useState("landing");   // "landing" | "vha"
+  const [vhaCtx, setVhaCtx] = useState(null);        // { file, parsed }
+
+  const enterVHA = (ctx) => { setVhaCtx(ctx); setView("vha"); };
+  const goBack   = ()    => { setVhaCtx(null); setView("landing"); };
+
+  if (view === "vha" && vhaCtx) {
+    return <VHAPage file={vhaCtx.file} parsed={vhaCtx.parsed} onBack={goBack} />;
+  }
+  return <LandingPage onEnterVHA={enterVHA} />;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);

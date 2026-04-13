@@ -165,6 +165,31 @@ def _div_str(divs):
     return ",".join(str(d) for d in sorted(divs))
 
 
+def _rate_groups(sub, div_label, basis, basis_unit, use_volumes=True):
+    """
+    Split a filtered subset into rate-homogeneous rows.
+    One row per distinct rate value found in the data.
+    """
+    rows = []
+    if sub.empty:
+        return rows
+    for rate_val, rsub in sub.groupby("Rate"):
+        lives = int(rsub["Lives"].sum())
+        vols  = int(rsub["Volumes"].sum()) if use_volumes else None
+        if lives == 0 and (vols is None or vols == 0):
+            continue
+        rows.append({
+            "division":     div_label,
+            "plans":        _plans_str(rsub),
+            "lives":        lives,
+            "volumes":      vols,
+            "basis":        basis,
+            "basis_unit":   basis_unit,
+            "current_rate": float(rate_val),
+        })
+    return rows
+
+
 def compute_benefit_groups(df: pd.DataFrame) -> dict:
     """
     Compute aggregated lives & volumes for each benefit group.
@@ -187,14 +212,7 @@ def compute_benefit_groups(df: pd.DataFrame) -> dict:
         (DIV_GROUP_2_4_9, "2,4,9"),
     ]:
         sub = grp("Basic Employee Life", divs)
-        results["LIFE"].append({
-            "division":  div_label,
-            "plans":     _plans_str(sub),
-            "lives":     int(sub["Lives"].sum()),
-            "volumes":   int(sub["Volumes"].sum()),
-            "basis":     "Per",
-            "basis_unit": "1000",
-        })
+        results["LIFE"].extend(_rate_groups(sub, div_label, "Per", "1000", use_volumes=True))
 
     # ── 2. DEPENDENT LIFE (Basic Dependent Life, Option != 00) ────────────
     results["DEPL"] = []
@@ -203,43 +221,16 @@ def compute_benefit_groups(df: pd.DataFrame) -> dict:
         (DIV_GROUP_2_4_9, "2,4,9"),
     ]:
         sub = grp("Basic Dependent Life", divs, df["Option"] != "00")
-        # also list all plans from the division (including 0-lives)
-        all_plans = grp("Basic Dependent Life", divs)  # include option 00 for plan list
-        all_in_div = df[df["Billing Division"].isin(divs)]
-        results["DEPL"].append({
-            "division":  div_label,
-            "plans":     _plans_str(all_in_div),
-            "lives":     int(sub["Lives"].sum()),
-            "volumes":   None,   # Per Member – no salary basis
-            "basis":     "Per",
-            "basis_unit": "Member",
-        })
+        results["DEPL"].extend(_rate_groups(sub, div_label, "Per", "Member", use_volumes=False))
 
     # ── 3. AD&D (Basic AD&D) ── All divisions ─────────────────────────────
     sub_add = df[df["Benefit"] == "Basic AD&D"]
-    results["ADD"] = [{
-        "division":  "All",
-        "plans":     "All",
-        "lives":     int(sub_add["Lives"].sum()),
-        "volumes":   int(sub_add["Volumes"].sum()),
-        "basis":     "Per",
-        "basis_unit": "1000",
-    }]
+    results["ADD"] = _rate_groups(sub_add, "All", "Per", "1000", use_volumes=True)
 
     # ── 4. LTD (Long Term Disability) ──────────────────────────────────────
     sub_ltd = grp("Long Term Disability", DIV_GROUP_1_8)
-    sub_ltd = sub_ltd[sub_ltd["Lives"] > 0]  # exclude zero-life rows
-    if len(sub_ltd) > 0:
-        results["LTD"] = [{
-            "division":  "1,8",
-            "plans":     _plans_str(sub_ltd),
-            "lives":     int(sub_ltd["Lives"].sum()),
-            "volumes":   int(sub_ltd["Volumes"].sum()),
-            "basis":     "Per",
-            "basis_unit": "100",
-        }]
-    else:
-        results["LTD"] = []
+    sub_ltd = sub_ltd[sub_ltd["Lives"] > 0]
+    results["LTD"] = _rate_groups(sub_ltd, "1,8", "Per", "100", use_volumes=True)
 
     # ── 5. STD (Short Term Disability) ─────────────────────────────────────
     results["STD"] = []
@@ -250,14 +241,7 @@ def compute_benefit_groups(df: pd.DataFrame) -> dict:
     ]:
         sub = grp("Short Term Disability", divs)
         if sub["Lives"].sum() > 0 or sub["Volumes"].sum() > 0:
-            results["STD"].append({
-                "division":  div_label,
-                "plans":     _plans_str(sub),
-                "lives":     int(sub["Lives"].sum()),
-                "volumes":   int(sub["Volumes"].sum()),
-                "basis":     "Per",
-                "basis_unit": "10",
-            })
+            results["STD"].extend(_rate_groups(sub, div_label, "Per", "10", use_volumes=True))
 
     # ── 6. EHC (Extended Health Care) ── group by rate within division group
     results["EHC"] = []
