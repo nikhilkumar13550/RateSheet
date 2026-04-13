@@ -442,3 +442,86 @@ def generate_excel(report_data: dict) -> bytes:
     buf = BytesIO()
     wb.save(buf)
     return buf.getvalue()
+
+
+def generate_sold_rate_sheet(report_data: dict, sold_rows: list) -> bytes:
+    """
+    Generate the Sold Rate Sheet Excel (ManuConnect format).
+    One row per Plan × Benefit × Coverage Type with current & proposed rates.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Sold Rate Sheet"
+    ws.sheet_view.showGridLines = False
+
+    client_name     = report_data.get("client_name", "")
+    contract_numbers = report_data.get("contract_numbers", [])
+    contract_no     = str(contract_numbers[0]) if contract_numbers else ""
+    period_str      = report_data.get("period_str", "")
+
+    # Parse effective date from period string → "01Feb2026" format
+    import re
+    eff_date = "01Feb2026"
+    m = re.search(r"(\d{4})", period_str)
+    if m:
+        eff_date = f"01Feb{m.group(1)}"
+
+    # ── Column definitions ────────────────────────────────────────────────
+    HEADERS = [
+        "System of Origin", "Group Name", "Group Number",
+        "Aggregated Description", "Account", "Class", "Status",
+        "Benefit Name", "Benefit Category", "Coverage Type",
+        "RGO Proposed Rate", "Current Rate", "RGO Proposed Rate\nEffective Date",
+    ]
+    COL_WIDTHS = [16, 20, 14, 22, 9, 8, 12, 30, 22, 14, 16, 14, 20]
+
+    for i, w in enumerate(COL_WIDTHS, 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    # ── Header row (yellow, bold, with auto-filter) ───────────────────────
+    YELLOW = "FFD700"
+    ws.row_dimensions[1].height = 30
+    for col, hdr in enumerate(HEADERS, 1):
+        cell = ws.cell(row=1, column=col, value=hdr)
+        cell.font      = Font(name="Calibri", bold=True, size=10, color="000000")
+        cell.fill      = PatternFill("solid", fgColor=YELLOW)
+        cell.alignment = Alignment(horizontal="center", vertical="center",
+                                   wrap_text=True)
+        cell.border    = Border(
+            bottom=Side(style="thin", color="999999"),
+            right=Side(style="thin", color="CCCCCC"),
+        )
+    ws.auto_filter.ref = f"A1:{get_column_letter(len(HEADERS))}1"
+
+    # ── Data rows ─────────────────────────────────────────────────────────
+    for r_idx, r in enumerate(sold_rows, 2):
+        shade = "F9F9F9" if r_idx % 2 == 0 else "FFFFFF"
+        vals = [
+            "ManuConnect",
+            client_name,
+            contract_no,
+            "",
+            "000",
+            r["plan"],
+            "Confirmed",
+            r["benefit_name"],
+            r["benefit_category"],
+            r["coverage_type"],
+            r["proposed_rate"],
+            r["current_rate"],
+            eff_date,
+        ]
+        for col, val in enumerate(vals, 1):
+            cell = ws.cell(row=r_idx, column=col, value=val)
+            cell.font      = Font(name="Calibri", size=10)
+            cell.fill      = PatternFill("solid", fgColor=shade)
+            cell.alignment = Alignment(
+                horizontal="right" if col in (11, 12) else "left",
+                vertical="center"
+            )
+            if col in (11, 12):
+                cell.number_format = "0.000"
+
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()

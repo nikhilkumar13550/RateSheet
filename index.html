@@ -581,6 +581,7 @@ function GroupsPreview({ groups }) {
 function VHAPage({ file, parsed, onBack }) {
   const [step,        setStep]        = useState(0);   // 0 = review, 1 = done
   const [loading,     setLoading]     = useState(false);
+  const [soldLoading, setSoldLoading] = useState(false);
   const [error,       setError]       = useState(null);
   const [adjs,        setAdjs]        = useState({
     LIFE:-0.20, DEPL:-0.20, ADD:0.00,
@@ -625,6 +626,23 @@ function VHAPage({ file, parsed, onBack }) {
       setStep(1);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
+  };
+
+  const handleSoldRates = async () => {
+    setSoldLoading(true); setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("adjustments", JSON.stringify(adjs));
+      const res = await fetch("/api/generate-sold-rates", { method:"POST", body: form });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url; a.download = "VHA_Sold_Rate_Sheet.xlsx"; a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) { setError(e.message); }
+    finally { setSoldLoading(false); }
   };
 
   return (
@@ -689,11 +707,23 @@ function VHAPage({ file, parsed, onBack }) {
             Generates the <strong>VHA Proposed Rates Excel</strong> with all benefit sections,<br/>
             current &amp; proposed rates, premiums, and rate change analysis.
           </p>
-          <button className="btn btn-download" disabled={loading} onClick={handleGenerate}>
-            {loading
-              ? <><span className="spinner"/>&nbsp;Generating…</>
-              : "⬇ Download Proposed Rates Excel"}
-          </button>
+          <div style={{display:"flex", gap:16, justifyContent:"center", flexWrap:"wrap"}}>
+            <button className="btn btn-download" disabled={loading} onClick={handleGenerate}>
+              {loading
+                ? <><span className="spinner"/>&nbsp;Generating…</>
+                : "⬇ Download Proposed Rates Excel"}
+            </button>
+            <button
+              className="btn btn-download"
+              style={{background:"#1a5276"}}
+              disabled={soldLoading}
+              onClick={handleSoldRates}
+            >
+              {soldLoading
+                ? <><span className="spinner"/>&nbsp;Generating…</>
+                : "⬇ Download Sold Rate Sheet"}
+            </button>
+          </div>
           {step === 1 && (
             <div className="alert alert-success" style={{marginTop:20,textAlign:"left"}}>
               ✅ <strong>Report generated!</strong> Check your downloads for <em>VHA_Proposed_Rates.xlsx</em>.

@@ -399,3 +399,59 @@ def compute_report_data(parsed: dict, rates: dict = None, adjustments: dict = No
         "adjustments":       final_adj,
         "rates_config":      final_rates,
     }
+
+
+# ── Benefit name mapping for Sold Rate Sheet ────────────────────────────────
+_BENEFIT_NAME_MAP = {
+    "Basic Employee Life":       "Life",
+    "Basic Dependent Life":      "Dependent Life",
+    "Basic AD&D":                "Accidental Death and Dismemberment",
+    "Long Term Disability":      "Long Term Disability",
+    "Short Term Disability":     "Short Term Disability",
+    "Extended Health Care":      "Extended Health Care",
+    "Dental":                    "Dental",
+}
+_BENEFIT_CODE_MAP = {
+    "Basic Employee Life":  "LIFE",
+    "Basic Dependent Life": "DEPL",
+    "Basic AD&D":           "ADD",
+    "Long Term Disability": "LTD",
+    "Short Term Disability":"STD",
+    "Extended Health Care": "EHC",
+    "Dental":               "DENT",
+}
+
+
+def compute_sold_rate_groups(parsed: dict, adjustments: dict = None) -> list:
+    """
+    Build per-Plan × Benefit × Coverage Type rows for the Sold Rate Sheet.
+    Returns list of dicts with current_rate and proposed_rate per row.
+    """
+    df  = parsed["df"]
+    adj = {**DEFAULT_ADJUSTMENTS, **(adjustments or {})}
+
+    rows = []
+    for (plan, benefit, rate_type), grp in df.groupby(
+        ["Plan", "Benefit", "Rate Type"], sort=True
+    ):
+        if benefit not in _BENEFIT_NAME_MAP:
+            continue
+        if grp["Lives"].sum() == 0:
+            continue
+
+        curr_rate = float(grp["Rate"].mode().iloc[0]) if not grp["Rate"].empty else 0.0
+        code      = _BENEFIT_CODE_MAP[benefit]
+        prop_rate = round(curr_rate * (1 + adj.get(code, 0.0)), 3)
+
+        coverage = rate_type if rate_type in ("Single", "Family") else ""
+
+        rows.append({
+            "plan":             plan,
+            "benefit_name":     _BENEFIT_NAME_MAP[benefit],
+            "benefit_category": "",
+            "coverage_type":    coverage,
+            "current_rate":     round(curr_rate, 4),
+            "proposed_rate":    prop_rate,
+        })
+
+    return rows

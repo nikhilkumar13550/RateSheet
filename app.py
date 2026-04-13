@@ -8,8 +8,8 @@ from flask import Flask, request, jsonify, send_file, send_from_directory
 from io import BytesIO
 import traceback
 
-from processor import parse_and_clean, compute_report_data, DEFAULT_RATES, DEFAULT_ADJUSTMENTS
-from generator import generate_excel
+from processor import parse_and_clean, compute_report_data, compute_sold_rate_groups, DEFAULT_RATES, DEFAULT_ADJUSTMENTS
+from generator import generate_excel, generate_sold_rate_sheet
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024  # 20 MB
@@ -148,6 +148,38 @@ def api_preview():
             return obj
 
         return jsonify({"ok": True, "report": clean(report_data)})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/generate-sold-rates", methods=["POST"])
+def api_generate_sold_rates():
+    """Generate the Sold Rate Sheet Excel (ManuConnect format)."""
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+    f = request.files["file"]
+    try:
+        file_bytes  = f.read()
+        adjustments = {}
+        raw_adj = request.form.get("adjustments")
+        if raw_adj:
+            try:
+                adjustments = json.loads(raw_adj)
+            except Exception:
+                pass
+
+        parsed      = parse_and_clean(file_bytes)
+        report_data = compute_report_data(parsed, adjustments=adjustments or None)
+        sold_rows   = compute_sold_rate_groups(parsed, adjustments=adjustments or None)
+        excel_bytes = generate_sold_rate_sheet(report_data, sold_rows)
+
+        return send_file(
+            BytesIO(excel_bytes),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True,
+            download_name="VHA_Sold_Rate_Sheet.xlsx",
+        )
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
